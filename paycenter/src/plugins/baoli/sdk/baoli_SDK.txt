@@ -1,0 +1,21 @@
+商户登入帐号:潘朵拉
+密码/支付密码：123456
+商户登入网址：http://www.baolipay.cn/user.html
+所有对接文挡和密钥都在商户后台    
+API资料    
+商户号ID：10481
+通道编码：
+微信H5:901
+微信扫码 ID: 902
+支付宝H5 ID:904
+通用支付宝扫码 ID : 925
+网银支付ID:907
+快捷支付 ID:911
+云闪付 ID:921
+支付宝H5扫码  ID :930
+请求地址:
+http://www.baolipay.cn/Pay_Index.html
+回调IP:
+23.225.198.42-47
+
+pptqp7lru8vedu03ivov4d706r9wxd03

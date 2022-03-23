@@ -1,0 +1,206 @@
+## .PHONY: all
+PROJECT_ROOT  = $(shell pwd)
+PROJECT_NAME  = BaseCode 
+SOLUTION_ROOT = $(shell cd $(PROJECT_ROOT)/../.. && pwd && cd $(PROJECT_ROOT))
+TEMP_ROOT     = $(SOLUTION_ROOT)/temp/$(PROJECT_NAME)
+INCLUDE_ROOT  = $(SOLUTION_ROOT)/include/$(PROJECT_NAME)
+LIB_DIR		  = $(SOLUTION_ROOT)/lib
+BIN_DIR		  = $(SOLUTION_ROOT)/bin
+
+TARGETLIBS    = lib$(PROJECT_NAME).a 
+TARGETSLIBS   = lib$(PROJECT_NAME).so
+EXECUTABLE    = 
+
+### C compiler flags
+CC=gcc
+## CFLAGS = -Wall -O2 -fPIC -MD $(foreach dir, $(INCLUDE_DIR), -I$(dir))
+CFLAGS = -Wall -O2 -fPIC
+
+### C++ compiler flags
+CXX=g++
+CPPFLAGS = 
+CXXFLAGS = $(CPPFLAGS) $(CFLAGS)
+
+### link flags
+LINKCC=$(CC)
+ARFLAGS=rc
+LDFLAGS  =-lstdc++ -ldl -lutil -lpthread -export-dynamic
+## XLDFLAGS =-Xliner "-(" $(LDFLAGS) -Xlinker "-)"
+XLDFLAGS=-lstdc++ -ldl -lutil -lpthread
+LDLIBS += -L $(LIB_DIR) -L .
+TEST_LDFLAGS = -l$(PROJECT_NAME)
+# SOFLAGS  =-lstdc++ -shared -fPIC
+
+### 编译环境变量定义
+CROSS_COMPILE=
+AS     = $(CROSS_COMPILE)as
+LD     = $(CROSS_COMPILE)ld
+CC     = $(CROSS_COMPILE)gcc
+CPP    = $(CC) -E
+AR     = $(CROSS_COMPILE)ar
+NM     = $(CROSS_COMPILE)nm
+STRIP  = $(CROSS_COMPILE)strip
+RANLIB = $(CROSS_COMPILE)ranlib
+
+### 本机相关命令
+CP     := cp
+RM     := rm
+MKDIR  := mkdir
+SED    := sed
+FIND   := find
+XARGS  := xargs
+
+
+########################################################################################################################
+### source files define
+### you can changed <DIRS_1>'s value
+
+DIRS_1 := . MyThread
+DIRS_2 := $(foreach dir, $(DIRS_1), $(PROJECT_ROOT)/$(dir))
+DIRS   := $(subst /.,,$(DIRS_2))
+SRCS := $(foreach dir, $(DIRS), $(wildcard $(dir)/*.c)) \
+		$(foreach dir, $(DIRS), $(wildcard $(dir)/*.cc)) \
+		$(foreach dir, $(DIRS), $(wildcard $(dir)/*.C)) \
+		$(foreach dir, $(DIRS), $(wildcard $(dir)/*.cpp)) 
+OBJS := $(patsubst %.c,   %.o, $(foreach dir, $(DIRS), $(wildcard $(dir)/*.c))) \
+		$(patsubst %.cc,  %.o, $(foreach dir, $(DIRS), $(wildcard $(dir)/*.cc))) \
+		$(patsubst %.C,   %.o, $(foreach dir, $(DIRS), $(wildcard $(dir)/*.C))) \
+		$(patsubst %.cpp, %.o, $(foreach dir, $(DIRS), $(wildcard $(dir)/*.cpp)))
+OBJS_1    := $(subst $(PROJECT_ROOT)/,,$(OBJS))
+OBJS_2    := $(foreach obj, $(OBJS_1), $(TEMP_ROOT)/$(obj))
+LIB_OBJS  := $(subst ./,,$(OBJS_2))
+DEPS      := $(patsubst %.o, %.d, $(LIB_OBJS))
+
+
+########################################################################################################################
+### test files define
+### you can changed <TEST_DIRS_1>'s value
+
+TEST_DIRS_1 := test
+TEST_DIRS_2 := $(foreach dir, $(TEST_DIRS_1), $(PROJECT_ROOT)/$(dir))
+TEST_DIRS   := $(subst /.,,$(TEST_DIRS_2))
+TEST_SRCS := $(foreach dir, $(TEST_DIRS), $(wildcard $(dir)/*.c)) \
+	 		 $(foreach dir, $(TEST_DIRS), $(wildcard $(dir)/*.cc)) \
+			 $(foreach dir, $(TEST_DIRS), $(wildcard $(dir)/*.C)) \
+			 $(foreach dir, $(TEST_DIRS), $(wildcard $(dir)/*.cpp)) 
+TEST_OBJS := $(patsubst %.c,   %.o, $(foreach dir, $(TEST_DIRS), $(wildcard $(dir)/*.c))) \
+			 $(patsubst %.cc,  %.o, $(foreach dir, $(TEST_DIRS), $(wildcard $(dir)/*.cc))) \
+	 		 $(patsubst %.C,   %.o, $(foreach dir, $(TEST_DIRS), $(wildcard $(dir)/*.C))) \
+			 $(patsubst %.cpp, %.o, $(foreach dir, $(TEST_DIRS), $(wildcard $(dir)/*.cpp)))
+TEST_OBJS_1   := $(subst $(PROJECT_ROOT)/,,$(TEST_OBJS))
+TEST_OBJS_2   := $(foreach obj, $(TEST_OBJS_1), $(TEMP_ROOT)/$(obj))
+TEST_EXE_OBJS := $(subst ./,,$(TEST_OBJS_2))
+# TEST_EXE_OBJS := $(subst ./,,$(foreach obj, $(TEST_OBJS), $(TEMP_ROOT)/$(obj)))
+TEST_DEPS     := $(patsubst %.o,%.d,$(TEST_EXE_OBJS))
+
+ALL_DIRS := $(DIRS) $(TEST_DIRS)
+ALL_SRCS := $(SRCS) $(TEST_SRCS)
+ALL_OBJS := $(LIB_OBJS) $(TEST_EXE_OBJS)
+ALL_DEPS := $(DEPS) $(TEST_DEPS)
+
+
+########################################################################################################################
+### dependencys file build rules
+
+$(TEMP_ROOT)/%.d: %.c
+	@[ ! -d $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@)) ] & $(MKDIR) -p $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@))
+	$(CC) -MM $(CFLAGS) $< > $@
+	$(CC) -MM $(CFLAGS) $< | sed s/\\.o/.d/ > $@
+
+$(TEMP_ROOT)/%.d: %.cc
+	@[ ! -d $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@)) ] & $(MKDIR) -p $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@))
+	$(CXX) -MM $(CXXFLAGS) $< > $@
+	$(CXX) -MM $(CXXFLAGS) $< | sed s/\\.o/.d/ > $@
+
+$(TEMP_ROOT)/%.d: %.cpp
+	@[ ! -d $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@)) ] & $(MKDIR) -p $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@))
+	$(CXX) -MM $(CXXFLAGS) $< > $@
+	$(CXX) -MM $(CXXFLAGS) $< | sed s/\\.o/.d/ > $@
+
+$(TEMP_ROOT)/%.d: %.C
+	@[ ! -d $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@)) ] & $(MKDIR) -p $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@))
+	$(CXX) -MM $(CXXFLAGS) $< > $@
+	$(CXX) -MM $(CXXFLAGS) $< | sed s/\\.o/.d/ > $@ 
+
+
+########################################################################################################################
+### object files build rules
+
+$(TEMP_ROOT)/%.o: %.c
+	@[ ! -d $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@)) ] & $(MKDIR) -p $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@))
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(TEMP_ROOT)/%.o: %.cc
+	@[ ! -d $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@)) ] & $(MKDIR) -p $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@))
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(TEMP_ROOT)/%.o: %.cpp
+	@[ ! -d $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@)) ] & $(MKDIR) -p $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@))
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(TEMP_ROOT)/%.o: %.C
+	@[ ! -d $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@)) ] & $(MKDIR) -p $(dir $(subst $(ALL_DIRS), $(TEMP_ROOT), $@))
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+
+########################################################################################################################
+### user defines
+
+all: $(TARGETLIBS) $(TARGETSLIBS) $(EXECUTABLE) 
+
+lib: $(TARGETLIBS) $(TARGETSLIBS)
+
+test: $(EXECUTABLE) 
+
+$(TARGETLIBS): $(LIB_OBJS)
+	@$(AR) $(ARFLAGS) $@ $(LIB_OBJS)
+	@$(RANLIB) $@
+
+$(TARGETSLIBS): $(LIB_OBJS)
+	@$(LINKCC) -shared $(subst $(DIRS), $(TEMP_ROOT), $^) $(CXXFLAGS) $(XLDFLAGS) -o $@ $(LDLIBS)
+
+$(EXECUTABLE): $(TEST_EXE_OBJS)
+	$(LINKCC) $(CXXFLAGS) $(XLDFLAGS) -o $@ $(TEMP_ROOT)/test/$@.o $(LDLIBS) $(TEST_LDFLAGS)
+	$(STRIP) --strip-unneeded $@
+
+## libBaseCode.a : $(DEPS) $(LIB_OBJS)
+## 	ar cr libBaseCode.a $(LIB_OBJS)
+##
+## libBaseCode.so: $(DEPS) $(LIB_OBJS)
+##	$(LINKCC) $(SOFLAGS) -o libBaseCode.so $(LIB_OBJS)
+
+INCLUDE_DIRS := $(subst $(PROJECT_ROOT), $(INCLUDE_ROOT), $(DIRS))
+install:
+	@$(foreach dir, $(INCLUDE_DIRS), $(shell $(MKDIR) -p $(dir)))
+	@[ ! -d $(LIB_DIR) ] & $(MKDIR) -p $(LIB_DIR)
+	@[ ! -d $(BIN_DIR) ] & $(MKDIR) -p $(BIN_DIR)
+	-$(CP) -f $(TARGETLIBS) $(LIB_DIR)
+	-$(CP) -f $(TARGETSLIBS) $(BIN_DIR)
+	-$(CP) -f $(EXECUTABLE) $(BIN_DIR)
+	-$(CP) -f *.h $(INCLUDE_ROOT)
+	
+clean:
+	-$(RM) $(ALL_OBJS) $(ALL_DEPS) $(TARGETLIBS) $(TARGETSLIBS) $(EXECUTABLE) *~
+
+explain:
+	@echo "The following information repressents you program:"
+	@echo "Solution Dir          : $(SOLUTION_ROOT)"
+	@echo "Project Dir           : $(PROJECT_ROOT)" 
+	@echo "Temp dir              : $(TEMP_ROOT)"
+	@echo "Final libs name       : $(TARGETLIBS) $(TARGETSLIBS)"
+	@echo "Source dir            : $(DIRS)"
+	@echo "Source files          : $(SRCS)" 
+	@echo "Object files          : $(LIB_OBJS)"
+	@echo "Dependency files      : $(DEPS)"
+	@echo "Final executable name : $(EXECUTABLE)"
+	@echo "Test source dir       : $(TEST_DIRS)"
+	@echo "Test Source files     : $(TEST_SRCS)"
+	@echo "Test Object files     : $(TEST_EXE_OBJS)"
+	@echo "Test Dependency files : $(TEST_DEPS)"
+
+depend: $(ALL_DEPS)
+	@echo "Dependencies are now up-to-date."
+
+-include $(ALL_DEPS)
+
+

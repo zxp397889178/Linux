@@ -1,0 +1,101 @@
+EXECUTABLE=libMyNet.a libMyNet.so
+LINKCC=$(CC)
+
+CPPFLAGS=
+
+BUILD_LIB = 
+
+
+## LDFLAGS=-lstdc++ -ldl -lutil -lpthread -Xlinker -export-dynamic
+LDFLAGS=-lstdc++ -ldl -lutil -lpthread
+SOFLAGS=-lstdc++ -shared -fPIC
+
+CC=gcc
+CFLAGS = -Wall -O2 -fPIC -ggdb3
+
+CXX=g++
+CXXFLAGS = $(CPPFLAGS) $(CFLAGS)
+
+SRCS := $(wildcard *.c) $(wildcard *.cc) $(wildcard *.C) $(wildcard *.cpp)
+OBJS := $(patsubst %.c,   %.o, $(wildcard *.c)) \
+        $(patsubst %.cc,  %.o, $(wildcard *.cc)) \
+        $(patsubst %.C,   %.o, $(wildcard *.C)) \
+		$(patsubst %.cpp, %.o, $(wildcard *.cpp)) 
+DEPS := $(patsubst %.o,%.d,$(OBJS))
+LIB_OBJS := NetFunc.o NetClient.o ByteStream.o ByteStreamEx.o
+
+
+TEST_SRCS := $(wildcard test/*.c) $(wildcard test/*.cc) $(wildcard test/*.C) $(wildcard test/*.cpp) 
+TEST_OBJS := $(patsubst %.c,   %.o, $(wildcard test/*.c)) \
+			 $(patsubst %.cc,  %.o, $(wildcard test/*.cc))  \
+			 $(patsubst %.C,   %.o, $(wildcard test/*.C))  \
+			 $(patsubst %.cpp, %.o, $(wildcard test/*.cpp)) 
+TEST_DEPS := $(patsubst %.o, %.d,$(TEST_OBJS))
+TEST_OBJS := test/test_ByteStream.o test/test_ByteStreamEx.o test/test_NetFunc.o
+
+
+
+all: $(EXECUTABLE)
+
+
+libMyNet.a : $(DEPS) $(LIB_OBJS)
+	ar cr libMyNet.a $(LIB_OBJS)
+
+libMyNet.so: $(DEPS) $(LIB_OBJS)
+	$(LINKCC) $(SOFLAGS) -o libMyNet.so $(LIB_OBJS)
+
+
+test: test_ByteStream test_ByteStreamEx test_NetFunc
+
+test_ByteStream : $(TEST_DEPS) $(TEST_OBJS)
+	$(LINKCC) $(LDFLAGS) -o test_ByteStream test/test_ByteStream.o ./libMyNet.a $(BUILD_LIB)
+
+test_ByteStreamEx : $(TEST_DEPS) $(TEST_OBJS)
+	$(LINKCC) $(LDFLAGS) -o test_ByteStreamEx test/test_ByteStreamEx.o ./libMyNet.a $(BUILD_LIB)
+
+test_NetFunc : $(TEST_DEPS) $(TEST_OBJS)
+	$(LINKCC) $(LDFLAGS) -o test_NetFunc test/test_NetFunc.o ./libMyNet.a $(BUILD_LIB)
+
+%.d: %.c
+	$(CC) -MM $(CFLAGS) $< > $@
+	$(CC) -MM $(CFLAGS) $< | sed s/\\.o/.d/ > $@
+
+%.d: %.cc
+	$(CXX) -MM $(CXXFLAGS) $< > $@
+	$(CXX) -MM $(CXXFLAGS) $< | sed s/\\.o/.d/ > $@
+
+%.d: %.cpp
+	$(CXX) -MM $(CXXFLAGS) $< > $@
+	$(CXX) -MM $(CXXFLAGS) $< | sed s/\\.o/.d/ > $@
+
+%.d: %.C
+	$(CXX) -MM $(CXXFLAGS) $< > $@
+	$(CXX) -MM $(CXXFLAGS) $< | sed s/\\.o/.d/ > $@ 
+
+install:
+	-mkdir -p ../../include/Network/
+	-mkdir -p ../../lib
+	-cp $(EXECUTABLE) ../../lib/
+	-cp NetFunc.h ../../include/Network/
+	-cp NetClient.h ../../include/Network/
+	-cp ByteStream.h ../../include/Network/
+	-cp INetClient.h ../../include/Network/
+
+	
+clean:
+	-rm $(OBJS) $(EXECUTABLE) $(DEPS) *~
+	-rm $(TEST_OBJS) test_* $(TEST_DEPS)
+
+explain:
+	@echo "The following information repressents you program:"
+	@echo "Final executable name : $(EXECUTABLE)"
+	@echo "Source files          : $(SRCS) $(TEST_SRCS)"
+	@echo "Object files          : $(OBJS) $(TEST_OBJS)"
+	@echo "Dependency files      : $(DEPS) $(TEST_DEPS)"
+
+depend: $(DEPS)
+	@echo "Dependencies are now up-to-date."
+
+-include $(DEPS)
+
+

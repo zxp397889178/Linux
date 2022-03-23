@@ -1,0 +1,90 @@
+<? xml version="1.0" encoding="utf8" ?>
+<main>
+    <log level="3" module="pay_apigate" path="/data/work/log" />
+    <service pid="./paycenter.pid" type="http" header="1" >
+        <net id="1" ports="3310" ssl="0" />
+        <accept timeout="100" parallel="10" />
+        <worker count="1" startId="1000" >
+            <client start="10000" maxconn="100000" step="1000" />
+        </worker>
+        <client>
+            <active timeout="500" />
+            <authorize timeout="500" />
+            <heartbeat interval="5000" timeout="3" />
+            <resp buffer_size="262144" />
+        </client>
+        <alert ids="88000015,88100003" url="http://webmw_hk.opk2.com:18081/bot/sendMsg" note="亚洲娱乐-充值中心"/>
+    </service>
+
+    <plugin empty_cgi="index.html" >
+        <cgi name="支付中心管理" slot1="./webpay/webpay_paycenter.so" slot2=""  init="doInitEx" entry="queryRegister" maintance="run" />
+        <cgi name="PAY77支付" slot1="./webpay/webpay_pay77.so" slot2=""  init="doInit" entry="queryRegister" maintance="run" />
+        <cgi name="提现管理" slot1="./webpay/webpay_withdraw.so" slot2=""  init="doInit" entry="queryRegister" maintance="run" />
+<!--
+        <cgi name="PAYVN支付" slot1="./webpay/webpay_vnpay.so" slot2=""  init="doInit" entry="queryRegister" maintance="run" />
+-->
+ 
+   </plugin>
+
+    <dbms>
+        <db id="1" name="redis" type="redis" host="127.0.0.1" port="6379" db="2" user="" passwd="" />
+        <db id="2" name="paycenter" type="mysql" host="127.0.0.1" port="3306" db="paycenter_ex" user="payuser" passwd="cXc0OTF5cThlMTc3NmI1ODBiMGQ=" />
+        <db id="4" name="userinfo" type="mysql" host="mysql.hall.gamescity" port="3306" db="dt_hall" user="dt_user" passwd="cXdidzR5cTIxYm82cjIyNDJRd3JnMnAzZUNhRVU=" />
+    </dbms>
+
+    <regex>
+        <item name="mobile" value="^(13[0-9]|14[579]|15[0-3,5-9]|16[6]|17[0135678]|18[0-9]|19[89])\d{8}$" />
+        <item name="identity" value="^\d{6}(18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}(\d|[xX])$" />
+    </regex>
+
+<!--
+    <clientIp source="header" 
+        source = [net|header|param]
+            net 是指从IClient* 获取， 如 pClient->getIpStr()，忽略 prop
+            header 是指从 CHttpRequest 的 header中获取, prop是指名称
+            param  是指从 CHttpRequest 的 param 中获取，prop是指名称
+        prop="X-Real-IP" />
+-->
+    <clientIp source="header" prop="X-Real-IP" />
+<!--
+    是否启用API认证, ative=[on|off]
+    source = [header|param|cookie]
+    user = 用户名
+    sign = 密钥
+-->
+    <authorize active="on">
+        <field source="param" user="user" sign="sign" />
+    </authorize>
+
+    <paycenter sign="off" mgr_sign="off">
+        <db main="paycenter" userinfo="userinfo" redis="redis" />
+        <uri_pay uri="api/pay"/>
+        <uri_reload uri="api/reload" validIp="127.0.0.1" />
+        <apply url="http://127.0.0.1:3310/api/reload" />
+        <timezone adjust="-3600" />
+        <ip enable="true" >
+            <report valid="0.0.0.0" desc="报表后台" />
+            <gamesvr valid="0.0.0.0" desc="游戏服务器" />
+        </ip>
+        <sign>
+            <recharge enable="on" field="sign" desc="充值请求是否需要签名" />
+            <withdraw enable="on" field="sign" desc="代付请求是否需要签名" />
+            <report enable="on" field="sign" desc="报表管理系统是否要签名" />
+        </sign>
+    </paycenter>
+
+    <fun sdk="FUN" desc="FUN支付" />
+    <xinfutong sdk="XINFUTONG" desc="信付通支付" />
+    <fulian sdk="FULIAN" desc="富连支付" />
+    <tianyi sdk="TIANYI" desc="天逸支付" />
+    <jiuwang sdk="JIUWANG" desc="九网支付" />
+    <guanglian sdk="GUANGLIAN" desc="鸿腾-广联支付" />
+    <pay77 sdk="PAY77" desc="越南-PAY77" withdraw_ip="0.0.0.0" >
+        <ip enable="true">
+            <recharge valid="0.0.0.0" desc="充值回调IP, 多个IP以','分隔"/>
+            <withdraw valid="0.0.0.0" desc="代付回调IP, 多个IP以','分隔"/>
+        </ip>
+    </pay77>
+    <vnpay sdk="VNPAY" desc="越南-PAYVN" privkey="/data/work/paycenter/paycenter/paycenter/key/vnpay/privkey.pem" pubkey="/data/work/paycenter/paycenter/paycenter/key/vnpay/pubkey.pem"/>
+</main>
+

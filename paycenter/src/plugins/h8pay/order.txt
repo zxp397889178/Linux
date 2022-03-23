@@ -1,0 +1,9 @@
+<3> <payv3(8012)> 2021-06-17 15:49:22 HTTP-DBG>NEW LINE: [merchant_no=880213&timestamp=1623916162&sign_type=MD5&params={"merchant_ref":+"P1623915862R13556e73",+"system_ref":+"TQ1623915863ZQ47C",+"amount":+"100.00",+"pay_amount":+"100.00",+"fee":+"3.20",+"status":+1,+"success_time":+1623916162,+"extend_params":+"",+"product":+"ThaiQR"}&sign=3ed01f0001f571ab046f97cbdff3b196]
+
+<3> <payv3(8012)> 2021-06-17 15:49:22 [H8Pay]deposit callback, header[h8pay/deposit_cb?merchant_no=880213&timestamp=1623916162&sign_type=MD5&params={"merchant_ref":+"P1623915862R13556e73",+"system_ref":+"TQ1623915863ZQ47C",+"amount":+"100.00",+"pay_amount":+"100.00",+"fee":+"3.20",+"status":+1,+"success_time":+1623916162,+"extend_params":+"",+"product":+"ThaiQR"}&sign=3ed01f0001f571ab046f97cbdff3b196], param[merchant_no=880213&timestamp=1623916162&sign_type=MD5&params={"merchant_ref":+"P1623915862R13556e73",+"system_ref":+"TQ1623915863ZQ47C",+"amount":+"100.00",+"pay_amount":+"100.00",+"fee":+"3.20",+"status":+1,+"success_time":+1623916162,+"extend_params":+"",+"product":+"ThaiQR"}&sign=3ed01f0001f571ab046f97cbdff3b196] post[merchant_no=880213&timestamp=1623916162&sign_type=MD5&params=%7B%22merchant_ref%22%3A+%22P1623915862R13556e73%22%2C+%22system_ref%22%3A+%22TQ1623915863ZQ47C%22%2C+%22amount%22%3A+%22100.00%22%2C+%22pay_amount%22%3A+%22100.00%22%2C+%22fee%22%3A+%223.20%22%2C+%22status%22%3A+1%2C+%22success_time%22%3A+1623916162%2C+%22extend_params%22%3A+%22%22%2C+%22product%22%3A+%22ThaiQR%22%7D&sign=3ed01f0001f571ab046f97cbdff3b196]
+
+<3> <payv3(8012)> 2021-06-17 15:49:22 EXECUTE SQL [call pQueryOrderInfo_v3('P1623915862R13556e73')], result[0]
+
+<3> <payv3(8012)> 2021-06-17 15:49:22 [H8Pay]orderNo P1623915862R13556e73 callback again.
+
+

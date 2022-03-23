@@ -1,0 +1,24 @@
+充值下单接口:https://api.tpay9.com/app/pay/pay.php
+充值查询接口：https://api.tpay9.com/app/pay/search.php
+下发申请接口：https://cms.tpay9.com/api/banksub.php
+下发查询接口：https://cms.tpay9.com/api/bankfind.php
+商户余额查询接口：https://cms.tpay9.com/api/balance.php
+回调IP：13.251.95.224
+       18.140.188.33
+
+
+
+扫码
+appid: 1671
+secret：TzhwTPRLHVZCQzukkjJjOZ8gxOglqgh9
+
+
+转账
+appid: 1672
+secret：aBXmQ0kuci2VNTWYj4JjOZGAFMy0vRSR
+
+
+
+
+
+

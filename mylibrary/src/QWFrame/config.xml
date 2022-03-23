@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+	<shmdq>
+		<thread shmkey="110001" msgqkey="110001" lockkey="110002" datablocksize="1024" datablocknum="10000" initdatasize="1024" maxdatasize="512000000" />
+		<db shmkey="210001" msgqkey="210001" lockkey="210002" datablocksize="1024" datablocknum="10000" initdatasize="1024" maxdatasize="512000000" />
+		<conn shmkey="310001" msgqkey="310001" lockkey="310002" datablocksize="1024" datablocknum="10000" initdatasize="1024" maxdatasize="512000000" />
+	</shmdq>
+</configuration>

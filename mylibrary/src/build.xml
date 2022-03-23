@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="library" default="install" basedir="./">
+    <target name="checkout" depends="" description="check out code from git" >
+        <echo message="check out code from git" />
+        <exec executable="git">
+            <arg line="pull origin" />
+        </exec>
+    </target>
+    <target name="build" depends="" description="build library" >
+        <echo message="build BaseCode" />
+        <exec executable="/bin/sh" >
+            <arg line="-c make -f ./BaseCode/Makefile" />
+        </exec>
+        <!--
+        <echo message="build Security"/>
+        <exec executable="make" >
+            <arg line="-f Security/Makefile" />
+        </exec>
+        <echo message="build Database"/>
+        <exec executable="make" >
+            <arg line="-f Database/Makefile" />
+        </exec>
+        <echo message="build Database Adapter"/>
+        <exec executable="make" >
+            <arg line="-f DbAdapter/Makefile" />
+        </exec>
+        <echo message="build Network"/>
+        <exec executable="make" >
+            <arg line="-f Network/Makefile" />
+        </exec>
+        -->
+    </target>
+</project>

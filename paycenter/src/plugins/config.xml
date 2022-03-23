@@ -1,0 +1,220 @@
+<? xml version="1.0" encoding="utf8" ?>
+
+<main>
+    <log level="3" module="paycenter" path="/data/fish/log" />
+    <service pid="./paycenter.pid" type="http" header="1" >
+        <net id="1" ports="3310" ssl="0" />
+        <accept timeout="100" parallel="10" />
+        <worker count="1" startId="1000" >
+            <client start="10000" maxconn="100000" step="1000" />
+        </worker>
+        <client>
+            <active timeout="500" />
+            <authorize timeout="500" />
+            <heartbeat interval="5000" timeout="3" />
+            <resp buffer_size="262144" />
+        </client>
+        <wealthcenter url="" desc="财富中心统计数据地址" />
+        <alarm nodename="paycenter" group="1" url="http://game.qa2.quwangame.com:18188/alarm/server" note="告警中心"/>
+    </service>
+
+    <plugin empty_cgi="index.html" >
+        <cgi name="云顶支付" slot1="./webpay/pay_zhpay.so" slot2="" init="doInit" entry="queryRegister" maintance="run" />
+        <cgi name="众币支付" slot1="./webpay/pay_zhongbi.so" slot2=""  init="doInit" entry="queryRegister" maintance="run" />
+        <cgi name="超凡支付" slot1="./webpay/pay_chaofan.so" slot2=""  init="doInit" entry="queryRegister" maintance="run" />
+    </plugin>
+
+    <dbms>
+        <db id="1" name="redis" type="redis" host="127.0.0.1" port="6379" db="2" user="" passwd="" />
+        <db id="2" name="paycenter" type="mysql" host="127.0.0.1" port="3306" db="paycenter" user="psvruser" passwd="cXd0ZXN5cXQ=" />
+        <db id="3" name="oracle" type="oracle" host="oracle.opk2.com" port="1521" db="orcl" user="yuzp" passwd="cXd6cGt5cWluZw==" />
+        <db id="4" name="userinfo" type="mysql" host="127.0.0.1" port="3306" db="dt_hall" user="test" passwd="cXd0ZXN5cXQ=" />
+    </dbms>
+
+    <regex>
+        <item name="mobile" value="^(13[0-9]|14[579]|15[0-3,5-9]|16[6]|17[0135678]|18[0-9]|19[89])\d{8}$" />
+        <item name="identity" value="^\d{6}(18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}(\d|[xX])$" />
+    </regex>
+
+<!--
+    <clientIp source="header" 
+        source = [net|header|param]
+            net 是指从IClient* 获取， 如 pClient->getIpStr()，忽略 prop
+            header 是指从 CHttpRequest 的 header中获取, prop是指名称
+            param  是指从 CHttpRequest 的 param 中获取，prop是指名称
+        prop="X-Real-IP" />
+-->
+    <clientIp source="header" prop="X-Real-IP" />
+<!--
+    是否启用API认证, ative=[on|off]
+    source = [header|param|cookie]
+    user = 用户名
+    sign = 密钥
+-->
+    <authorize active="on">
+        <field source="param" user="user" sign="sign" />
+    </authorize>
+
+    <paycenter>
+        <!-- order=> timeout: 订单超过xxx秒后没有回调，则认为是超时
+                     re-deliver: 成功订单重新发货的时间序列，即下次操作的间隔秒数
+        -->
+        <order timeout="1200" re-deliver="3,5,10,15,30,60,90" />
+        <credit>
+            <ip enable="true" valid="0.0.0.0" />
+            <token keyFormat="credit#token#order_%%s" keyPatten="credit#token#order_*" timeout="300" />
+            <respback keyFormat="credit#credit_respcb#%s" keyPatten="credit#credit_respcb#*"/>
+        </credit>
+
+
+        <game id="6" code="daishu" url="http://hall.gamescity:18706/v2/server/trade" sign="pay.quwangame.com"/>
+        <db main="paycenter" userinfo="userinfo" redis="redis" />
+        <uri_pay uri="pay"/>
+        <uri_reload uri="api/reload" validIp="127.0.0.1" />
+        <callback url="http://119.3.59.200:8082/phoenixfun_qa_pingbi/index.html" />
+        <notify host="http://119.3.59.200:3311" />
+    </paycenter>
+
+    <h8pay sdk="H8PAY" desc="官方海外捕鱼支付" >
+        <deposit>
+            <!-- request   => 请求获得订单的缓存，由单独的进程来操作
+                 callback  => 检查是否回调超时
+                 redeliver => 发货失败后重新发货
+            -->
+            <request currKey="H8#deposit_req#current" maxKey="H8#deposit_req#max"
+                keyFormat="H8#deposit_req#%%012ld" keyPatten="H8#deposit_req#*"  />
+            <callback keyFormat="H8#deposit_cb#%%s" keyPatten="H8#deposit_cb#*" timeout="1200" />
+            <redeliver currKey="H8#deposit_good#current" maxKey="H8#deposit_good#max"
+                keyFormat="H8#deposit_good#%%012ld" keyPatten="H8#deposit_good#*" />
+        </deposit>
+        <credit>
+            <callback keyFormat="H8#credit_cb#%%s" keyPatten="H8#credit_cb#*" />
+        </credit>
+    </h8pay>
+    <q10pay sdk="Q10PAY" desc="ZYH-泰国支付">
+        <deposit>
+            <!-- request   => 请求获得订单的缓存，由单独的进程来操作
+                 callback  => 检查是否回调超时
+                 redeliver => 发货失败后重新发货
+            -->
+            <request currKey="Q10#deposit_req#current" maxKey="Q10#deposit_req#max"
+                keyFormat="Q10#deposit_req#%%012ld" keyPatten="Q10#deposit_req#*" />
+            <callback keyFormat="Q10#deposit_cb#%%s" keyPatten="Q10#deposit_cb#*" timeout="1200" />
+            <redeliver currKey="Q10#deposit_good#current" maxKey="Q10#deposit_good#max"
+                keyFormat="Q10#deposit_good#%%012ld" keyPatten="Q10#deposit_good#*" />
+        </deposit>
+        <credit>
+            <callback keyFormat="Q10#credit_cb#%%s" keyPatten="Q10#credit_cb#*" />
+        </credit>
+    </q10pay>
+
+    <dotwallet sdk="DOTWALLET" desc="数字钱包支付">
+        <deposit>
+            <request currKey="DOTWALLET#deposit_req#current" maxKey="DOTWALLET#deposit_req#max"
+                keyFormat="DOTWALLET#deposit_req#%012ld" keyPatten="DOTWALLET#deposit_req#*" />
+            <callback keyFormat="DOTWALLET#deposit_cb#%s" keyPatten="DOTWALLET#deposit_cb#*" timeout="1200" />
+            <respback keyFormat="DOTWALLET#deposit_respcb#%s" keyPatten="DOTWALLET#deposit_respcb#*"/>
+            <redeliver currKey="DOTWALLET#deposit_good#current" maxKey="DOTWALLET#deposit_good#max"
+                keyFormat="DOTWALLET#deposit_good#%012ld" keyPatten="DOTWALLET#deposit_good#*"  timeout="1200"/>
+            <queryorder>
+                <!--<ordernum keyFormat="DOTWALLET#ordernum#%s" keyPatten="DOTWALLET#ordernum#*" timeout="1200" />-->
+                <orderdata currKey="DOTWALLET#order_data#current" maxKey="DOTWALLET#order_data#max"
+                    keyFormat="DOTWALLET#order_data#%012ld" keyPatten="DOTWALLET#deposit_good#*"  timeout="1200"/>
+            </queryorder>
+        </deposit>
+        <credit>
+            <callback keyFormat="DOTWALLET#credit_cb#%s" keyPatten="DOTWALLET#credit_cb#*"  timeout="1200"/>
+            <respback keyFormat="DOTWALLET#credit_respcb#%s" keyPatten="DOTWALLET#credit_respcb#*"/>
+            <verifyorder currKey="DOTWALLET#sdk_cb#current" maxKey="DOTWALLET#sdk_cb#max"
+                keyFormat="DOTWALLET#sdk_cb#%012ld" keyPatten="DOTWALLET#sdk_cb#*" timeout="1200" />
+        </credit>
+        <config>
+            <address BSV="166hDerUadyQLxgx7YtDUj9jVUPye824sr" BTC="19r9QJLD6A51ByunynBRZ2oLnyDkpn9s8R" ETH="0xb0DA17F1c9c2468906B5F9927e41e03082bFb42A" />
+            <auth_token url="https://api.ddpurse.com/v1/oauth2/get_access_token" client_id="737a0a6f04b7d2d88168594f26e71b76" client_secret="686183dd72b226aa8decf228f190261b" desc="获得应用授权"/>
+            <user_receive_adress_url url="https://api.ddpurse.com/v1/user/get_user_receive_address" desc="获取用户收款地址"/>
+            <payurl url="https://api.ddpurse.com/v1/transact/order/apply_payment?order_id=" desc="构建支付 URL，并引导用户跳转至构造好的 URL 进行支付"/>
+            <trans_url url="https://api.ddpurse.com/alchemist/authed_public/get_rate" desc="汇率转换"/>
+            <deposit_autopay open="1" desc="兑入下单时自动支付开关， 1-开 0-关"/>
+            <autopay_balance_url url="https://api.ddpurse.com/v1/user/get_autopay_balance" desc="获取用户自动支付余额"/>
+            <queryorder_url url="https://api.ddpurse.com/v1/transact/order/get_order" desc="查询订单"/>
+            <autopay_transfer_url url="https://api.ddpurse.com/v1/user/autopay_transfer?redirect_url=" desc="自动支付划转URL"/>
+            <autopay_config_url url="https://api.ddpurse.com/v1/user/autopay_config?client_id=" desc="设置单笔限额URL"/>
+            <redis_key deposit_keyFormat="DOTWALLET#deposit#order#%s" credit_keyFormat="DOTWALLET#credit#order#%s" timeout="1200"/>
+        </config>
+    </dotwallet>
+
+    <steampay sdk="STEAM" desc="steam支付">
+        <deposit>
+            <!-- request   => 请求获得订单的缓存，由单独的进程来操作
+                 callback  => 检查是否回调超时
+                 redeliver => 发货失败后重新发货
+            -->
+            <request currKey="STEAM#deposit_req#current" maxKey="STEAM#deposit_req#max"
+                keyFormat="STEAM#deposit_req#%012ld" keyPatten="STEAM#deposit_req#*" />
+            <callback keyFormat="STEAM#deposit_cb#%s" keyPatten="STEAM#deposit_cb#*" timeout="1200" />
+            <redeliver currKey="STEAM#deposit_good#current" maxKey="STEAM#deposit_good#max"
+                keyFormat="STEAM#deposit_good#%012ld" keyPatten="STEAM#deposit_good#*" />
+        </deposit>
+        <credit>
+            <callback keyFormat="STEAM#credit_cb#%s" keyPatten="STEAM#credit_cb#*" />
+        </credit>
+        <steamsdk>
+            <callback currKey="STEAM#sdk_cb#current" maxKey="STEAM#sdk_cb#max"
+                 keyFormat="STEAM#sdk_cb#%012ld" keyPatten="STEAM#sdk_cb#*" timeout="1200"/>
+        </steamsdk>
+        <config>
+            <getuserinfo_url url="https://partner.steam-api.com/ISteamMicroTxn/GetUserInfo/v2" desc="汇率转换"/>
+            <finalizetxn_url url="https://partner.steam-api.com/ISteamMicroTxn/FinalizeTxn/v2/"  desc="完成之前通过 InitTxn API 开始的购买"/>
+            <querytxn_url url="https://partner.steam-api.com/ISteamMicroTxn/QueryTxn/v2"  desc="查询之前使用 InitTxn 创建的一个订单的状态"/>
+        </config>
+    </steampay>
+
+    <zhpay sdk="ZHONGHE" desc="云顶支付">
+        <notify uri="api/zhpay/callback" validIp="0.0.0.0" />
+    </zhpay>
+
+    <zhongbi sdk="ZHONGBI" desc="众币支付">
+        <notify uri="api/zhongbi/callback" validIp="0.0.0.0" />
+    </zhongbi>
+
+    <chaofan sdk="CHAOFAN" desc="超凡支付">
+        <notify uri="api/chaofan/callback" validIp="0.0.0.0" />
+    </chaofan>
+
+    <Youle sdk="YOULE" desc="有乐支付" >
+        <notify uri="api/chaofan/callback" validIp="0.0.0.0" />
+    </Youle>
+
+    <google sdk="GOOGLE" desc="谷歌支付">
+        <notify uri="api/chaofan/callback" validIp="0.0.0.0" />
+        <certified script="./test1.py" function="certify" keyfile="./py/client_secret.json"/>
+        <package name="com.firegame.rummy" />
+    </google>
+<!-- 已失效  
+    <alipay>
+        <param url="https://openapi.alipay.com/gateway.do" 
+            charset="utf-8" signType="RSA2" version="1.0" />
+        <crazyfish appId="2016012101111554" 
+            key="./.key/alipay_crazyfish_key.pem" 
+            pubkey="./.key/alipay_crazyfish_pubkey.pem" />
+        <testapp appId="" key="" pubkey="" />
+        <precreate items="123" />
+    </alipay>
+    <baoli sdk="BAOLI" desc="丽宝支付，已失效">
+        <notify uri="api/baoli/callback" validIp="23.225.198.42" />
+        <transfer url="http://119.3.59.200:3311/api/baoli/html"  />
+    </baoli>
+    <richcw desc="极速支付，袋鼠专用">
+        <db main="paycenter" redis="redis" />
+        <payid data="26,27" />
+        <callback url="http://hall.gamescity:18706/v2/server/trade" />
+        <notify url="http://127.0.0.1:18091/richcw_cb" />
+    </richcw>
+    <lion dbId="2" redisId="1" ids="1,2,3"
+        callback="http://127.0.0.1:18091/lion_cb"
+        notify="http://hall.gamescity:18706/v2/server/trade"
+        desc="狮子会支付，火星104渠道专用" />
+-->
+</main>
+
+

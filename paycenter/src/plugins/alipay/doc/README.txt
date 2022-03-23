@@ -1,0 +1,1 @@
+支付宝手机网站接入地址：https://opendocs.alipay.com/apis/api_1/alipay.trade.wap.pay

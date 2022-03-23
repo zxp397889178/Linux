@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<frame>
+	<!-- ip列表设置，包括允许和禁止登陆 -->
+	<iptables enable="false" file="./iptable.xml" />
+
+	<!-- 日志文件设置 -->
+	<log name="mallsvr" path="/data/fish/log" level="3"/>
+
+	<!-- 贞听 -->
+	<listener>
+		<listen id="5001" name="proxy" actor="1"  port="8001" proto="tcp" />	 
+		<listen id="5002" name="manager" actor="2" port="8002" proto="http" />
+	</listener>
+	
+	<!-- 连接 -->
+	<connector>
+		<conn id="5003" name="bgsvr" actor="7" host="192.168.1.108" port="8001" count="1" />
+		<conn id="5004" name="authsvr" actor="5" host="192.168.1.108" port="8003"  count="1" />
+	</connector>
+	
+	<!-- 数据库 -->
+	<mysql>
+ 		<conn id="1" name="main" host="192.168.1.108" port="3306" db="crazyfish_main" user="svr_user" passwd="gsR6Qp2caE" charset="utf8"/>                                                                                                                     
+  	<conn id="2" name="recharge" host="192.168.1.108" port="3306" db="crazyfish_recharge" user="svr_user" passwd="gsR6Qp2caE" charset="utf8"/>
+	</mysql>
+	<redis>
+		<conn id="10" name="main" host="192.168.1.108" port="6379" db="1" timeout="3000"/>
+	</redis>
+
+  <!-- 监控 -->
+  <alarm name="mallsvr" id="10000" net_id="10001" logic_id="10002" path="./config.xml"/>
+</frame>

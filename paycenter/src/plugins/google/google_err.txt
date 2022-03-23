@@ -1,0 +1,1 @@
+<HttpError 400 when requesting https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.voicechat.game.royalludo/purchases/products/100/tokens/test-token-1234?alt=json returned "Invalid Value". Details: "Invalid Value">
