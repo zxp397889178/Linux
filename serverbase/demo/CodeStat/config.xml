@@ -1,0 +1,16 @@
+<? xml version="1.0" encoding="utf8" ?>
+<main>
+    <!-- 
+         所有passwd 都是必须加密的
+    -->
+    <log level="3" module="codestat" path="/data/work/logs" />
+    <dbms_mysql host="192.168.2.66" port="3306" db="codestat" user="test" passwd="cXd0ZXN5cXQxMjM0NTY=" />
+    <dbms_redis host="127.0.0.1" port="6379" db="1" user="" passwd="" />
+    <repo script="./script/svncount2.sh" step="3" >
+        <!--
+        <svn name="测试代码" url="http://192.168.1.103:18080/svn/study/trunk" user="test" passwd="cXcxMjN5cTQ1Ng==" />
+        -->
+        <svn name="CrazyFish" url="http://192.168.1.103:18080/svn/CrazyFish/trunk" user="yuzp" passwd="cXd5b2d5cWEwOTEw" />
+    </repo>
+</main>
+

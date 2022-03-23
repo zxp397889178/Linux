@@ -1,0 +1,6 @@
+<? xml version="1.0" encoding="utf8" ?>
+<main>
+    <service>
+        <alert appName="mytest" appKey="hello@123456" url="http://121.43.148.148:19011/bot/sendMsg" ids="88100012" />
+    </service>
+</main>

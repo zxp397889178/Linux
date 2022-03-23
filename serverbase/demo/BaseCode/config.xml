@@ -1,0 +1,124 @@
+<? xml version="1.0" encoding="utf8" ?>
+<main>
+    <!-- level  日志等级、
+         module 在log中显示的TITLE
+         path   日志文件路径
+         -->
+    <log level="3" module="webmw" path="/data/work/logs" />
+
+    <!-- 服务配置
+         pid        唯一匹配的启动进程ID
+         type       网络服务类型 http/tcp/websocket
+         header     包头类型： 1-MSG_HEADER; 2-uint32_t(cmdId); 3-uint16_t(pkgLen) + uint16_t(cmdId) 
+         net-+
+             +- ports   网络端口，支持多个，以","分隔
+             +- ssl     是否支持SSL
+         accept-+
+                +- timeout  连接超时
+                +- parallel 并发连接数量
+         client-+
+                +- <active> -++- timeout 空连接的超时时间，以毫秒计
+                +- <authorize> -++- timeout 连接认证的超时时间，暂未用
+                +- <heartbeat> -+
+                                +- interval 每次检查心跳的时间间隔
+                                +- timeout  超过多少次心跳无响应后，认为连接已断开
+         worker-+
+                +- count 启动的子进程数量
+                +- startId 起始的子进程的ID
+                +- <client> -+
+                             +- start 客户端连接的起始ID
+                             +- maxconn 每个工作进程的最大客户端连接数，
+                             +-         当到达最大值时，ID从start重新开始
+                             +- step
+    <service pid="./apigate.pid" parallel="5" >
+         -->
+    <service pid="./webmw.pid" type="http" header="1">
+        <net id="1" ports="19200" ssl="0" />
+        <accept timeout="100" parallel="10" />
+        <worker count="1" startId="1000" >
+            <client start="10000" maxconn="100000" step="1000" />
+        </worker>
+        <client>
+            <active timeout="500" />
+            <authorize timeout="500" />
+            <heartbeat interval="5000" timeout="3" />
+                <resp buffer_size="262144" />
+        </client>
+    </service>
+
+    <!-- 插件的配置
+         dll    服务的插件名称
+         -->
+    <plugin empty_cgi="index.html" >
+        <cgi name="supergm" slot1="./plugins/plugin_supergm.so" slot2="" init="doInit" entry="queryRegister" maintance="run" />
+<!--
+        <cgi name="mysql_report" slot1="./plugins/plugin_mysql_rpt.so" slot2="" init="doInit" entry="queryRegister" maintance="run" />
+        <cgi name="ipdata" slot1="./plugins/plugin_ipdata.so" slot2="" init="doInit" entry="queryRegister" maintance="run" />
+
+        <cgi name="system" slot1="./plugins/plugin_system.so" slot2="" init="doInit" entry="queryRegister" maintance="run" />
+        <cgi name="qrcode" slot1="./plugins/plugin_qrcode.so" slot2="" init="doInit" entry="queryRegister" maintance="run" />
+-->
+
+<!--
+        <aliase aliase="open" cgi="api/reportex/UVPV-Open-Land" />
+        <aliase aliase="event" cgi="api/reportex/UVPV-Click-Land" />
+        <aliase aliase="api/report/PRO_LAND_OPEN" cgi="api/reportex/UVPV-Open-Land" />
+        <aliase aliase="api/report/PRO_LAND_CLICK" cgi="api/reportex/UVPV-Click-Land" />
+        <aliase aliase="api/report/PRO_GET_GAMES" cgi="api/reportex/Games-List" />
+        <aliase aliase="api/report/PRO_GET_GAMES_CHANNELS" cgi="api/reportex/Channels-List" />
+        <aliase aliase="api/report/PRO_GET_PVUV_DAILY_CHARS" cgi="api/reportex/UVPV-Daily-Chars" />
+        <aliase aliase="api/report/PRO_GET_PVUV_DAILY" cgi="api/reportex/UVPV-Daily-Report" />
+
+        <aliase aliase="api/report/prc_get_stock_daily" cgi="api/report/ReportManager-MoneyStock" />
+-->
+    </plugin>
+
+    <dbms>
+        <db id="1" name="hudiezhibofish" type="mysql" host="192.168.0.81" port="3306" db="qw_fish_report" user="report" passwd="cXdmZHN5cWE0dDJldFEyMnB3MzVnZUNhRVU=" />
+        <db id="2" name="hudiezhibo" type="mysql" host="192.168.0.81" port="3306" db="platform_report" user="platform_report" passwd="cXdmZGF5cTQzdDJ3cnB6c3IydzU0Q2FV" />
+        <db id="3" name="report_main" type="mysql" host="192.168.0.81" port="3306" db="platform_report" user="platform_report" passwd="cXdmZGF5cTQzdDJ3cnB6c3IydzU0Q2FV" />
+        <db id="4" name="redis_main" type="redis" host="127.0.0.1" port="6379" db="3" user="" passwd="" />
+        <db id="5" name="supergm_main" type="mysql" host="127.0.0.1" port="3306" db="supergm" user="test" passwd="cXd0ZXN5cXQ=" />
+    </dbms>
+
+<!--
+    <clientIp source="header" 
+        source = [net|header|param]
+            net 是指从IClient* 获取， 如 pClient->getIpStr()，忽略 prop
+            header 是指从 CHttpRequest 的 header中获取, prop是指名称
+            param  是指从 CHttpRequest 的 param 中获取，prop是指名称
+        prop="X-Real-IP" />
+-->
+    <clientIp source="header" prop="X-Real-IP" />
+<!--
+    是否启用API认证, ative=[on|off]
+    source = [header|param|cookie]
+    user = 用户名
+    sign = 密钥
+-->
+    <authorize active="on">
+        <field source="param" user="user" sign="sign" />
+    </authorize>
+    <supergm maindb="supergm_main" redis="redis_main" token_prefix="supergm#token_by_user#" />
+
+    <regex>
+        <item name="mobile" value="^(13[0-9]|14[579]|15[0-3,5-9]|16[6]|17[0135678]|18[0-9]|19[89])\d{8}$" />
+        <item name="identity" value="^\d{6}(18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}(\d|[xX])$" />
+    </regex>
+
+    <alipay>
+        <param url="https://openapi.alipay.com/gateway.do" 
+            charset="utf-8" signType="RSA2" version="1.0" />
+        <crazyfish appId="2016012101111554" 
+            key="./.key/alipay_crazyfish_key.pem" 
+            pubkey="./.key/alipay_crazyfish_pubkey.pem" />
+        <testapp appId="" key="" pubkey="" />
+        <precreate items="123" />
+    </alipay>
+
+    <ipdata datfile="./ip.dat" /> 
+    <report format="./report.xml" dbms="hudiezhibofish,hudiezhibo,report_main" api="api/report/.*" />
+    <oracle_rpt format="./oracle_rpt.xml" dbms="pvuv_db" api="api/reportex/.*" />
+</main>
+
+

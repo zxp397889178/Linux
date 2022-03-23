@@ -1,0 +1,24 @@
+
+#ifndef _QS_BASELIB_SHMLOG_ERROR_H_
+#define _QS_BASELIB_SHMLOG_ERROR_H_
+
+
+
+#define COMM_LOG_SHM_ERROR_ARG                   -1
+#define COMM_LOG_SHM_ERROR_MAGICNUM1_CORRUPT     -2
+#define COMM_LOG_SHM_ERROR_LEN_CORRUPT           -3
+#define COMM_LOG_SHM_ERROR_MAGICNUM2_CORRUPT     -4
+#define COMM_LOG_SHM_ERROR_PUSH_RETRY_FAILED     -5
+#define COMM_LOG_SHM_ERROR_RESET                 -6
+#define COMM_LOG_SHM_ERROR_NO_ROOM               -7
+#define COMM_LOG_SHM_ERROR_CAS_FAILED            -8
+
+
+
+
+#define COMM_LOG_SHM_QUEUE_EMPTY     2001
+#define COMM_LOG_SHM_LOG_NOT_READY   2002
+
+
+#endif //  _QS_BASELIB_SHMLOG_ERROR_H_
+
